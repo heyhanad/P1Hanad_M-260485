@@ -15,7 +15,7 @@ function draw() { //--> draw is the function that is called every frame
   line(100, 100, 400, 300);//--> line is the line that is drawn on the canvas
 
   rect(100, 100, 400, 300);//--> rect is the rectangle that is drawn on the canvas
-
+  
 
 
 }
