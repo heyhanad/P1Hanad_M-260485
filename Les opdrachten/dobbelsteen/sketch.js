@@ -2,12 +2,7 @@ let RandomNumber = 1;
 
 function keyPressed() {
   if (keyCode === 'c') {
-    RandomNumber = 1;
-    RandomNumber = 2;
-    RandomNumber = 3;
-    RandomNumber = 4;
     RandomNumber = 5;
-    RandomNumber = 6;
 
   }
 }
