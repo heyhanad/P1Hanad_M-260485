@@ -10,8 +10,8 @@ let vak3Y = 110
 let vakSize = 90;
 let vakRadius = 30;
 
-let vak2 = 0;
 let vak1 = 0;
+let vak2 = 0;
 let vak3 = 0;
 
 let speler = 2;
@@ -143,6 +143,5 @@ function mousePressed() {
 
     }
   }
-
 
 }
