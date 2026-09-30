@@ -175,7 +175,7 @@ function draw() {
     text("to", 350, 230, 90,)
     fill("Red")
     text("start!", 480, 230, 90,)
-  }  // dit zijn de leters voor de font / gameStart
+  }  // dit zijn de leters voor de font / gamestart
 
   if (gameStart == "einde") {
     textSize(60);
@@ -210,7 +210,7 @@ function mousePressed() {
 
   if (gameStart == "start") {
     gameStart = "spel";
-    return; // stop hier, zodat je niet gelijk ook een vak aanklikt
+    return; // stop hier zodat je niet gelijk ook een vak aanklikt
   }
 
   if (gameStart == "einde") {
