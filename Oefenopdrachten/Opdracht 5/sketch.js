@@ -112,4 +112,5 @@ function draw() {
 
     rect(508 - 6, 90 + f * 29, 20 + f * 20 - ((f - 6) * downMargin), 30 - 2);
   }
+  
 }
