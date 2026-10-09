@@ -1,5 +1,7 @@
 let kleuren = ["green", "Red"]
 
+let antwoorden = ["Donald Duck", "Ben10", "adventureTime"]
+
 let ImageFinandJake;
 let ImageDonald1;
 let ImageBen10;
@@ -65,6 +67,6 @@ function adventure() {
   console.log("AdventureTime werd geklikt!");
 }
 
-function Rangers(){
+function Rangers() {
   console.log("Power Rangers werd geklikt!");
 }
