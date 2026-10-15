@@ -1,4 +1,4 @@
-let kleuren = ["green", "Red"]
+let kleuren = ["green", "Red"] // wil ik nog gebruiken voor de feedback; goed/fout
 
 let antwoorden = ["Donald Duck", "Ben10", "adventureTime"]
 
