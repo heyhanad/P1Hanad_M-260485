@@ -1,13 +1,22 @@
 let health = 100;
-let energy = 70;
-let happiness = 40;
-let hunger = 100;
+let energy = 0;
+let happiness = 0;
+let hunger = 0;
 let petX = 400;
 let petY = 500;
-let petSize = 200;
+let petSize = 450;
 let draggingPet = false;
 
-// eten (-1000 betekent: staat er niet, je ziet het niet)
+let imgMonster
+let imgBackground
+
+///
+
+function preload() {
+  imgMonster = loadImage('Monster.png'); // mijn image finn & Jake.
+}
+
+// eten -1000 betekent: staat er niet je ziet het niet
 let food1X = -1000;
 let food1Y = -1000;
 let food2X = -1000;
@@ -31,12 +40,10 @@ let food10Y = -1000;
 
 let Food;
 
-// ===== STICK STAP 1: variabelen maken =====
-// Haal de // weg bij deze regels:
-// let stickX = 150;
-// let stickY = 700;
-// let draggingStick = false;
-// let hitTimer = 0;
+let stickX = 150;
+let stickY = 700;
+let draggingStick = false;
+let hitTimer = 0;
 
 function setup() {
   createCanvas(800, 800);
@@ -50,6 +57,12 @@ function setup() {
 
 function draw() {
   background(220);
+  
+  textSize(30)
+  text("HogRiderBOYYY", 50, 500)
+
+  image(imgMonster, 700, 10, 100, 100);
+
 
   hunger = hunger - 0.05;
   energy = energy - 0.01;
@@ -58,9 +71,7 @@ function draw() {
     health = health - 0.05;
     happiness = happiness - 0.05;
 
-    // ===== ENERGY STAP: energy gaat omlaag zonder eten =====
-    // Haal de // weg bij de regel hieronder:
-    // energy = energy - 0.05;
+    energy = energy - 0.05;
   }
 
   hunger = constrain(hunger, 0, 100);
@@ -68,7 +79,7 @@ function draw() {
   health = constrain(health, 0, 100);
   happiness = constrain(happiness, 0, 100);
 
-  // pet tekenen
+  // pet
   fill("Cyan");
   circle(petX, petY, petSize);
 
@@ -85,27 +96,27 @@ function draw() {
   circle(food9X, food9Y, 30);
   circle(food10X, food10Y, 30);
 
-  // ===== STICK STAP 2: de stick tekenen =====
-  // stroke(120, 70, 20);
-  // strokeWeight(10);
-  // line(stickX - 40, stickY, stickX + 40, stickY);
-  // strokeWeight(1);
-  // stroke(0);
+  // de stick
+  stroke(120, 70, 20);
+  strokeWeight(10);
+  line(stickX - 40, stickY, stickX + 40, stickY);
+  strokeWeight(1);
+  stroke(0);
 
-  // ===== STICK STAP 5: slaan =====
-  // if (hitTimer > 0) {
-  //   hitTimer = hitTimer - 1;
-  // }
-  // if (draggingStick == true && dist(stickX, stickY, petX, petY) < petSize / 2 && hitTimer == 0) {
-  //   health = health - 10;
-  //   hitTimer = 30;
-  // }
+  // slaan
+  if (hitTimer > 0) {
+    hitTimer = hitTimer - 1;
+  }
+  if (draggingStick == true && dist(stickX, stickY, petX, petY) < petSize / 2 && hitTimer == 0) {
+    health = health - 20;
+    hitTimer = 30;
+  }
 
-  // ================= DE BALKJES =================
+  // de bars
   noStroke(); // geen dunne rand om de blokjes
 
-  // ---------- HEALTH (rood) ----------
-  // icoon: hartje (eerst zwart eronder, dan rood)
+  // health
+  // icons heb eerste zwarrt er onder gezet en dan rood
   fill(0);
   rect(32, 31, 12, 8);
   rect(48, 31, 12, 8);
@@ -134,8 +145,8 @@ function draw() {
   fill(160, 10, 0); // donkere streep
   rect(100, 55, health * 3, 5);
 
-  // ---------- ENERGY (groen) ----------
-  // icoon: bliksem
+  // energy
+  // icoonse: bliksem
   fill(0);
   rect(44, 89, 16, 8);
   rect(40, 93, 16, 8);
@@ -152,7 +163,7 @@ function draw() {
   rect(38, 107, 12, 4);
   rect(38, 111, 8, 4);
   rect(34, 115, 8, 4);
-  // balk
+  // Rect balks
   fill(225, 215, 205);
   rect(92, 82, 316, 46, 6);
   fill(0);
@@ -166,8 +177,8 @@ function draw() {
   fill(90, 160, 10);
   rect(100, 115, energy * 3, 5);
 
-  // ---------- HAPPY (geel) ----------
-  // icoon: smiley
+  // happy UI
+  // icon: smile
   fill(0);
   rect(36, 147, 20, 8);
   rect(32, 151, 28, 8);
@@ -200,8 +211,8 @@ function draw() {
   fill(215, 160, 0);
   rect(100, 175, happiness * 3, 5);
 
-  // ---------- HUNGER (blauw) ----------
-  // icoon: eten (oranje bolletje)
+  // hunger blauw
+  // icons eten oranje bolletje
   fill(0);
   rect(36, 207, 20, 8);
   rect(32, 211, 28, 8);
@@ -230,16 +241,14 @@ function draw() {
   fill(40, 110, 180);
   rect(100, 235, hunger * 3, 5);
 
-  stroke(0); // rand weer aanzetten voor de rest van de game
+  stroke(0); // randen weer aanzetten voor de rest van de game
 }
 
-function mousePressed() {
-  // ===== STICK STAP 3: de stick vastpakken =====
-  // Dit moet BOVENAAN staan, voor de pet-check.
-  // if (dist(mouseX, mouseY, stickX, stickY) < 40) {
-  //   draggingStick = true;
-  //   return;
-  // }
+function mousePressed() { // dist betekent the punten tussen de waardes? dus je hebt x, en dan heb je y,
+  if (dist(mouseX, mouseY, stickX, stickY) < 40) {
+    draggingStick = true;
+    return;// gaat weer terug naar het begin van de code 
+  }
 
   if (dist(mouseX, mouseY, petX, petY) < petSize / 2) {
     draggingPet = true;
@@ -247,15 +256,17 @@ function mousePressed() {
 }
 
 function mouseDragged() {
-  // ===== STICK STAP 4: de stick laten meebewegen =====
-  // if (draggingStick == true) {
-  //   stickX = mouseX;
-  //   stickY = mouseY;
-  // }
+  // de stick laten meebewegen
+  if (draggingStick == true) {
+    stickX = mouseX;
+    stickY = mouseY;
+  }
 
-  if (draggingPet == true) {
+  if (draggingPet == true) { // hier heb ik constrain gebruikt constrain is eigenlijk het controleerd of je waarde niet te hoog is voor de maximaal dus je hebt 6700, 0, 100 6700 is te hoog dus hij pakt de 100
+    // ik gebruikt de constrain ook voor mijn slap rect tool dus als hij dicht bij is bij een object dat hij het uitvoerd in de canvas
     petX = constrain(mouseX, petSize / 2, width - petSize / 2);
-    petY = constrain(mouseY, petSize / 2, height - petSize / 2);
+    petY = constrain(mouseY, petSize / 2, height - petSize / 2); // de constrain controleerd of
+    // mijn muis dicht bij is bij mijn pet zo ja dan kan ik de pet draggen
 
     // eten opeten (alleen als je de pet sleept)
     if (dist(petX, petY, food1X, food1Y) < petSize / 2 + 15) {
@@ -324,12 +335,12 @@ function mouseDragged() {
 function mouseReleased() {
   draggingPet = false;
 
-  // ===== STICK STAP 6: de stick loslaten =====
-  // draggingStick = false;
+  // de stick loslaten
+  draggingStick = false;
 }
 
 function FoodSpawn() {
-  // Elke klik zet maar 1 eten neer: het eerste eten dat er nog niet is.
+  // Elke klik zet maar 1 eten neer het eerste eten dat er nog niet is.
   if (food1X < 0) {
     food1X = random(30, width - 30);
     food1Y = random(280, height - 30);
@@ -361,4 +372,7 @@ function FoodSpawn() {
     food10X = random(30, width - 30);
     food10Y = random(280, height - 30);
   }
+
+
+
 }

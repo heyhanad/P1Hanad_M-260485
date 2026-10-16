@@ -55,6 +55,7 @@ function setup() {
   volgendeKnop.style("font-size", "30px");
   volgendeKnop.mousePressed(volgendeVraag);
   volgendeKnop.hide();
+  // buttons
 }
 
 
