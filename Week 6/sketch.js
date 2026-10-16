@@ -1,7 +1,9 @@
-let health = 100;
-let energy = 0;
-let happiness = 0;
-let hunger = 0;
+const stats = {
+  health: 100,
+  energy: 100,
+  happiness: 100,
+  hunger: 100
+};
 let petX = 400;
 let petY = 500;
 let petSize = 450;
@@ -9,106 +11,146 @@ let draggingPet = false;
 
 let imgMonster
 let imgBackground
+let imgSword
+let imgBed
+let imgPizza
 
 ///
 
 function preload() {
-  imgMonster = loadImage('Monster.png'); // mijn image finn & Jake.
+  imgMonster = loadImage('Monster.png'); // Monster energy = drinken
+  imgBackground = loadImage('Background.png');// background
+  imgSword = loadImage('minecraf diamond longSword p5.png');// THE DIAMONDLONGSWORDD  LOOL
+  imgBed = loadImage('Bed.png');// Tuff bed
+  imgPizza = loadImage('pizza.png');// i love pizza but not fries so put the fries in the bag lil bro
 }
 
-// eten -1000 betekent: staat er niet je ziet het niet
-let food1X = -1000;
-let food1Y = -1000;
-let food2X = -1000;
-let food2Y = -1000;
-let food3X = -1000;
-let food3Y = -1000;
-let food4X = -1000;
-let food4Y = -1000;
-let food5X = -1000;
-let food5Y = -1000;
-let food6X = -1000;
-let food6Y = -1000;
-let food7X = -1000;
-let food7Y = -1000;
-let food8X = -1000;
-let food8Y = -1000;
-let food9X = -1000;
-let food9Y = -1000;
-let food10X = -1000;
-let food10Y = -1000;
+const foods = [];
+const drinks = [];
 
 let Food;
+let Drink;
+let Sleep;
 
 let stickX = 150;
 let stickY = 700;
 let draggingStick = false;
 let hitTimer = 0;
+let gameCanvas;
+let gameScale = 1;
+let gameWorldWidth = 800;
+let bedX = 650;
+let bedY = 650;
+let bedVisible = false;
+let petSleeping = false;
 
 function setup() {
-  createCanvas(800, 800);
+  gameCanvas = createCanvas(windowWidth, windowHeight);
+
+  document.body.style.margin = "0";
+  document.body.style.overflow = "hidden";
+  gameCanvas.style("display", "block");
 
   Food = createButton("FoodSpawn");
-  Food.position(550, 20);
   Food.style("background-color", "orange");
-  Food.style("font-size", "25px");
   Food.mousePressed(FoodSpawn);
+
+  Drink = createButton("Drinken");
+  Drink.style("background-color", "lightblue");
+  Drink.mousePressed(DrinkSpawn);
+
+  Sleep = createButton("Slapen");
+  Sleep.style("background-color", "lightgreen");
+  Sleep.mousePressed(sleepPet);
+
+  fitCanvasToWindow();
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+  fitCanvasToWindow();
+}
+
+function fitCanvasToWindow() {
+  const previousWorldWidth = gameWorldWidth;
+  gameScale = height / 800;
+  gameWorldWidth = width / gameScale;
+  petX += (gameWorldWidth - previousWorldWidth) / 2;
+  bedX = constrain(650, petSize / 2, gameWorldWidth - petSize / 2);
+
+  Food.position(width - 250 * gameScale, 20 * gameScale);
+  Food.style("font-size", `${25 * gameScale}px`);
+  Drink.position(width - 500 * gameScale, 20 * gameScale);
+  Drink.style("font-size", `${25 * gameScale}px`);
+  Sleep.position(width - 400 * gameScale, 20 * gameScale);
+  Sleep.style("font-size", `${25 * gameScale}px`);
 }
 
 function draw() {
   background(220);
-  
-  textSize(30)
-  text("HogRiderBOYYY", 50, 500)
+  image(imgBackground, 0, 0, width, height);
 
-  image(imgMonster, 700, 10, 100, 100);
+  push();
+  scale(gameScale);
 
+  stats.hunger -= 0.05;
+  stats.energy -= 0.01;
 
-  hunger = hunger - 0.05;
-  energy = energy - 0.01;
+  if (stats.hunger <= 0) {
+    stats.health -= 0.05;
+    stats.happiness -= 0.05;
 
-  if (hunger <= 0) {
-    health = health - 0.05;
-    happiness = happiness - 0.05;
-
-    energy = energy - 0.05;
+    stats.energy -= 0.05;
   }
 
-  hunger = constrain(hunger, 0, 100);
-  energy = constrain(energy, 0, 100);
-  health = constrain(health, 0, 100);
-  happiness = constrain(happiness, 0, 100);
+  petSleeping = bedVisible && dist(petX, petY, bedX, bedY) < 90;
+  if (petSleeping) {
+    stats.energy += 0.2;
+  }
+
+  for (const statName in stats) {
+    stats[statName] = constrain(stats[statName], 0, 100);
+  }
 
   // pet
   fill("Cyan");
   circle(petX, petY, petSize);
 
-  // eten tekenen
-  fill("orange");
-  circle(food1X, food1Y, 30);
-  circle(food2X, food2Y, 30);
-  circle(food3X, food3Y, 30);
-  circle(food4X, food4Y, 30);
-  circle(food5X, food5Y, 30);
-  circle(food6X, food6Y, 30);
-  circle(food7X, food7Y, 30);
-  circle(food8X, food8Y, 30);
-  circle(food9X, food9Y, 30);
-  circle(food10X, food10Y, 30);
+  if (bedVisible) {
+    image(imgBed, bedX - 100, bedY - 70, 200, 140);
+  }
 
-  // de stick
-  stroke(120, 70, 20);
-  strokeWeight(10);
-  line(stickX - 40, stickY, stickX + 40, stickY);
-  strokeWeight(1);
-  stroke(0);
+  textSize(30)
+  fill('black')
+  text("HogRiderBOYY999", petX - 140, petY)
+
+  if (petSleeping) {
+    textSize(20);
+    fill("white");
+    text("Slaapt - energie herstelt", bedX - 105, bedY + 95);
+  }
+
+  // Eten en drinken tekenen
+  for (const food of foods) {
+    if (food) {
+      image(imgPizza, food.x - 32, food.y - 32, 64, 64);
+    }
+  }
+  for (const drink of drinks) {
+    if (drink) {
+      image(imgMonster, drink.x - 22, drink.y - 35, 44, 70);
+    }
+  }
+
+  // het zwaard
+  image(imgSword, stickX - 50, stickY - 50, 100, 100);
 
   // slaan
   if (hitTimer > 0) {
     hitTimer = hitTimer - 1;
   }
   if (draggingStick == true && dist(stickX, stickY, petX, petY) < petSize / 2 && hitTimer == 0) {
-    health = health - 20;
+    stats.health -= 20;
     hitTimer = 30;
   }
 
@@ -139,11 +181,11 @@ function draw() {
   fill(60); // lege balk
   rect(100, 30, 300, 30);
   fill(200, 50, 40); // rode vulling
-  rect(100, 30, health * 3, 30);
+  rect(100, 30, stats.health * 3, 30);
   fill(255, 110, 100); // lichte streep
-  rect(100, 33, health * 3, 5);
+  rect(100, 33, stats.health * 3, 5);
   fill(160, 10, 0); // donkere streep
-  rect(100, 55, health * 3, 5);
+  rect(100, 55, stats.health * 3, 5);
 
   // energy
   // icoonse: bliksem
@@ -171,11 +213,11 @@ function draw() {
   fill(60);
   rect(100, 90, 300, 30);
   fill(130, 200, 50);
-  rect(100, 90, energy * 3, 30);
+  rect(100, 90, stats.energy * 3, 30);
   fill(190, 255, 110);
-  rect(100, 93, energy * 3, 5);
+  rect(100, 93, stats.energy * 3, 5);
   fill(90, 160, 10);
-  rect(100, 115, energy * 3, 5);
+  rect(100, 115, stats.energy * 3, 5);
 
   // happy UI
   // icon: smile
@@ -205,11 +247,11 @@ function draw() {
   fill(60);
   rect(100, 150, 300, 30);
   fill(255, 200, 40);
-  rect(100, 150, happiness * 3, 30);
+  rect(100, 150, stats.happiness * 3, 30);
   fill(255, 255, 100);
-  rect(100, 153, happiness * 3, 5);
+  rect(100, 153, stats.happiness * 3, 5);
   fill(215, 160, 0);
-  rect(100, 175, happiness * 3, 5);
+  rect(100, 175, stats.happiness * 3, 5);
 
   // hunger blauw
   // icons eten oranje bolletje
@@ -235,99 +277,64 @@ function draw() {
   fill(60);
   rect(100, 210, 300, 30);
   fill(80, 150, 220);
-  rect(100, 210, hunger * 3, 30);
+  rect(100, 210, stats.hunger * 3, 30);
   fill(140, 210, 255);
-  rect(100, 213, hunger * 3, 5);
+  rect(100, 213, stats.hunger * 3, 5);
   fill(40, 110, 180);
-  rect(100, 235, hunger * 3, 5);
+  rect(100, 235, stats.hunger * 3, 5);
 
   stroke(0); // randen weer aanzetten voor de rest van de game
+  pop();
 }
 
 function mousePressed() { // dist betekent the punten tussen de waardes? dus je hebt x, en dan heb je y,
-  if (dist(mouseX, mouseY, stickX, stickY) < 40) {
+  const gameMouseX = mouseX / gameScale;
+  const gameMouseY = mouseY / gameScale;
+
+  if (dist(gameMouseX, gameMouseY, stickX, stickY) < 55) {
     draggingStick = true;
     return;// gaat weer terug naar het begin van de code 
   }
 
-  if (dist(mouseX, mouseY, petX, petY) < petSize / 2) {
+  if (dist(gameMouseX, gameMouseY, petX, petY) < petSize / 2) {
     draggingPet = true;
   }
 }
 
 function mouseDragged() {
+  const gameMouseX = mouseX / gameScale;
+  const gameMouseY = mouseY / gameScale;
+
   // de stick laten meebewegen
   if (draggingStick == true) {
-    stickX = mouseX;
-    stickY = mouseY;
+    stickX = gameMouseX;
+    stickY = gameMouseY;
   }
 
   if (draggingPet == true) { // hier heb ik constrain gebruikt constrain is eigenlijk het controleerd of je waarde niet te hoog is voor de maximaal dus je hebt 6700, 0, 100 6700 is te hoog dus hij pakt de 100
     // ik gebruikt de constrain ook voor mijn slap rect tool dus als hij dicht bij is bij een object dat hij het uitvoerd in de canvas
-    petX = constrain(mouseX, petSize / 2, width - petSize / 2);
-    petY = constrain(mouseY, petSize / 2, height - petSize / 2); // de constrain controleerd of
+    petX = constrain(gameMouseX, petSize / 2, gameWorldWidth - petSize / 2);
+    petY = constrain(gameMouseY, petSize / 2, 800 - petSize / 2); // de constrain controleerd of
     // mijn muis dicht bij is bij mijn pet zo ja dan kan ik de pet draggen
 
-    // eten opeten (alleen als je de pet sleept)
-    if (dist(petX, petY, food1X, food1Y) < petSize / 2 + 15) {
-      food1X = -1000;
-      food1Y = -1000;
-      hunger = hunger + 20;
-      happiness = happiness + 5;
+    // Eten opeten (alleen als je de pet sleept)
+    for (let index = 0; index < foods.length; index++) {
+      const food = foods[index];
+      if (food && dist(petX, petY, food.x, food.y) < petSize / 2 + 35) {
+        foods[index] = null;
+        stats.hunger += 20;
+        stats.happiness += 5;
+        stats.health += 20;
+      }
     }
-    if (dist(petX, petY, food2X, food2Y) < petSize / 2 + 15) {
-      food2X = -1000;
-      food2Y = -1000;
-      hunger = hunger + 20;
-      happiness = happiness + 5;
-    }
-    if (dist(petX, petY, food3X, food3Y) < petSize / 2 + 15) {
-      food3X = -1000;
-      food3Y = -1000;
-      hunger = hunger + 20;
-      happiness = happiness + 5;
-    }
-    if (dist(petX, petY, food4X, food4Y) < petSize / 2 + 15) {
-      food4X = -1000;
-      food4Y = -1000;
-      hunger = hunger + 20;
-      happiness = happiness + 5;
-    }
-    if (dist(petX, petY, food5X, food5Y) < petSize / 2 + 15) {
-      food5X = -1000;
-      food5Y = -1000;
-      hunger = hunger + 20;
-      happiness = happiness + 5;
-    }
-    if (dist(petX, petY, food6X, food6Y) < petSize / 2 + 15) {
-      food6X = -1000;
-      food6Y = -1000;
-      hunger = hunger + 20;
-      happiness = happiness + 5;
-    }
-    if (dist(petX, petY, food7X, food7Y) < petSize / 2 + 15) {
-      food7X = -1000;
-      food7Y = -1000;
-      hunger = hunger + 20;
-      happiness = happiness + 5;
-    }
-    if (dist(petX, petY, food8X, food8Y) < petSize / 2 + 15) {
-      food8X = -1000;
-      food8Y = -1000;
-      hunger = hunger + 20;
-      happiness = happiness + 5;
-    }
-    if (dist(petX, petY, food9X, food9Y) < petSize / 2 + 15) {
-      food9X = -1000;
-      food9Y = -1000;
-      hunger = hunger + 20;
-      happiness = happiness + 5;
-    }
-    if (dist(petX, petY, food10X, food10Y) < petSize / 2 + 15) {
-      food10X = -1000;
-      food10Y = -1000;
-      hunger = hunger + 20;
-      happiness = happiness + 5;
+    // Drinken (alleen als je de pet sleept)
+    for (let index = 0; index < drinks.length; index++) {
+      const drink = drinks[index];
+      if (drink && dist(petX, petY, drink.x, drink.y) < petSize / 2 + 25) {
+        drinks[index] = null;
+        stats.energy += 20;
+        stats.happiness += 5;
+      }
     }
   }
 }
@@ -340,39 +347,22 @@ function mouseReleased() {
 }
 
 function FoodSpawn() {
-  // Elke klik zet maar 1 eten neer het eerste eten dat er nog niet is.
-  if (food1X < 0) {
-    food1X = random(30, width - 30);
-    food1Y = random(280, height - 30);
-  } else if (food2X < 0) {
-    food2X = random(30, width - 30);
-    food2Y = random(280, height - 30);
-  } else if (food3X < 0) {
-    food3X = random(30, width - 30);
-    food3Y = random(280, height - 30);
-  } else if (food4X < 0) {
-    food4X = random(30, width - 30);
-    food4Y = random(280, height - 30);
-  } else if (food5X < 0) {
-    food5X = random(30, width - 30);
-    food5Y = random(280, height - 30);
-  } else if (food6X < 0) {
-    food6X = random(30, width - 30);
-    food6Y = random(280, height - 30);
-  } else if (food7X < 0) {
-    food7X = random(30, width - 30);
-    food7Y = random(280, height - 30);
-  } else if (food8X < 0) {
-    food8X = random(30, width - 30);
-    food8Y = random(280, height - 30);
-  } else if (food9X < 0) {
-    food9X = random(30, width - 30);
-    food9Y = random(280, height - 30);
-  } else if (food10X < 0) {
-    food10X = random(30, width - 30);
-    food10Y = random(280, height - 30);
+  foods.push({
+    x: random(30, gameWorldWidth - 30),
+    y: random(280, 800 - 30)
+  });
+}
+
+function DrinkSpawn() {
+  drinks.push({
+    x: random(30, gameWorldWidth - 30),
+    y: random(280, 800 - 30)
+  });
+}
+
+function sleepPet() {
+  bedVisible = !bedVisible;
+  if (!bedVisible) {
+    petSleeping = false;
   }
-
-
-
 }
