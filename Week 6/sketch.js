@@ -1,4 +1,4 @@
-const stats = {
+let stats = {
   health: 100,
   energy: 100,
   happiness: 100,
@@ -14,6 +14,18 @@ let imgBackground
 let imgSword
 let imgBed
 let imgPizza
+let imgTV
+let tvVideo
+let tvMusic
+
+let TV_IMAGE_CROP = { x: 252, y: 205, width: 150, height: 285 };
+let TV_WIDTH = 220;
+let TV_HEIGHT = 418;
+let TV_SCREEN_CROP = { x: 273, y: 227, width: 109, height: 88 };
+let happinessButton;
+let tvVisible = false;
+let videoPlayingOnTV = false;
+let petWasNearTV = false;
 
 ///
 
@@ -23,10 +35,13 @@ function preload() {
   imgSword = loadImage('minecraf diamond longSword p5.png');// THE DIAMONDLONGSWORDD  LOOL
   imgBed = loadImage('Bed.png');// Tuff bed
   imgPizza = loadImage('pizza.png');// i love pizza but not fries so put the fries in the bag lil bro
+  imgTV = loadImage('minecraft TV.png');
+  tvMusic = loadSound('2.06_-_Kaleo_-_Way_Down_We_Go_OST_Lucifer_(mp3.pm).mp3');
 }
 
-const foods = [];
-const drinks = [];
+let foods = [];
+let drinks = [];
+let statNames = ["health", "energy", "happiness", "hunger"];
 
 let Food;
 let Drink;
@@ -51,6 +66,22 @@ function setup() {
   document.body.style.overflow = "hidden";
   gameCanvas.style("display", "block");
 
+  tvVideo = createVideo('11.1 — Timeline export of 10.1.mp4');
+  tvVideo.hide();
+  tvVideo.elt.playsInline = true;
+  tvVideo.elt.muted = true;
+  tvVideo.elt.onended = function () {
+    videoPlayingOnTV = false;
+    tvMusic.stop();
+    setGameControlsVisible(true);
+  };
+  tvVideo.elt.onerror = function () {
+    videoPlayingOnTV = false;
+    tvMusic.stop();
+    setGameControlsVisible(true);
+    console.error("De video kon niet worden afgespeeld:", tvVideo.elt.error);
+  };
+
   Food = createButton("FoodSpawn");
   Food.style("background-color", "orange");
   Food.mousePressed(FoodSpawn);
@@ -63,6 +94,10 @@ function setup() {
   Sleep.style("background-color", "lightgreen");
   Sleep.mousePressed(sleepPet);
 
+  happinessButton = createButton("Happiness");
+  happinessButton.style("background-color", "pink");
+  happinessButton.mousePressed(spawnTVAndBoostHappiness);
+
   fitCanvasToWindow();
 }
 
@@ -72,26 +107,74 @@ function windowResized() {
 }
 
 function fitCanvasToWindow() {
-  const previousWorldWidth = gameWorldWidth;
+  let previousWorldWidth = gameWorldWidth;
   gameScale = height / 800;
   gameWorldWidth = width / gameScale;
   petX += (gameWorldWidth - previousWorldWidth) / 2;
   bedX = constrain(650, petSize / 2, gameWorldWidth - petSize / 2);
 
   Food.position(width - 250 * gameScale, 20 * gameScale);
-  Food.style("font-size", `${25 * gameScale}px`);
+  Food.style("font-size", 25 * gameScale + "px");
   Drink.position(width - 500 * gameScale, 20 * gameScale);
-  Drink.style("font-size", `${25 * gameScale}px`);
+  Drink.style("font-size", 25 * gameScale + "px");
   Sleep.position(width - 400 * gameScale, 20 * gameScale);
-  Sleep.style("font-size", `${25 * gameScale}px`);
+  Sleep.style("font-size", 25 * gameScale + "px");
+  happinessButton.position(width - 650 * gameScale, 20 * gameScale);
+  happinessButton.style("font-size", 25 * gameScale + "px");
 }
 
 function draw() {
+  if (videoPlayingOnTV) {
+    background(0);
+    if (tvVideo.elt.readyState >= 2) {
+      let videoAspect = tvVideo.elt.videoWidth / tvVideo.elt.videoHeight;
+      let canvasAspect = width / height;
+      let videoWidth = width;
+      let videoHeight = height;
+
+      if (videoAspect > canvasAspect) {
+        videoHeight = videoWidth / videoAspect;
+      } else {
+        videoWidth = videoHeight * videoAspect;
+      }
+
+      image(
+        tvVideo,
+        (width - videoWidth) / 2,
+        (height - videoHeight) / 2,
+        videoWidth,
+        videoHeight
+      );
+    }
+    return;
+  }
+
   background(220);
   image(imgBackground, 0, 0, width, height);
 
   push();
   scale(gameScale);
+
+  if (tvVisible) {
+    let tvPosition = getTVPosition();
+    image(
+      imgTV,
+      tvPosition.x,
+      tvPosition.y,
+      TV_WIDTH,
+      TV_HEIGHT,
+      TV_IMAGE_CROP.x,
+      TV_IMAGE_CROP.y,
+      TV_IMAGE_CROP.width,
+      TV_IMAGE_CROP.height
+    );
+
+    let petNearTV = isPetNearTV();
+    if (petNearTV && !petWasNearTV) {
+      playVideoOnTV();
+    }
+    petWasNearTV = petNearTV;
+  }
 
   stats.hunger -= 0.05;
   stats.energy -= 0.01;
@@ -108,7 +191,8 @@ function draw() {
     stats.energy += 0.2;
   }
 
-  for (const statName in stats) {
+  for (let statIndex = 0; statIndex < statNames.length; statIndex++) {
+    let statName = statNames[statIndex];
     stats[statName] = constrain(stats[statName], 0, 100);
   }
 
@@ -131,12 +215,14 @@ function draw() {
   }
 
   // Eten en drinken tekenen
-  for (const food of foods) {
+  for (let foodIndex = 0; foodIndex < foods.length; foodIndex++) {
+    let food = foods[foodIndex];
     if (food) {
       image(imgPizza, food.x - 32, food.y - 32, 64, 64);
     }
   }
-  for (const drink of drinks) {
+  for (let drinkIndex = 0; drinkIndex < drinks.length; drinkIndex++) {
+    let drink = drinks[drinkIndex];
     if (drink) {
       image(imgMonster, drink.x - 22, drink.y - 35, 44, 70);
     }
@@ -150,7 +236,7 @@ function draw() {
     hitTimer = hitTimer - 1;
   }
   if (draggingStick == true && dist(stickX, stickY, petX, petY) < petSize / 2 && hitTimer == 0) {
-    stats.health -= 20;
+    stats.health -= 10;
     hitTimer = 30;
   }
 
@@ -288,8 +374,8 @@ function draw() {
 }
 
 function mousePressed() { // dist betekent the punten tussen de waardes? dus je hebt x, en dan heb je y,
-  const gameMouseX = mouseX / gameScale;
-  const gameMouseY = mouseY / gameScale;
+  let gameMouseX = mouseX / gameScale;
+  let gameMouseY = mouseY / gameScale;
 
   if (dist(gameMouseX, gameMouseY, stickX, stickY) < 55) {
     draggingStick = true;
@@ -302,8 +388,8 @@ function mousePressed() { // dist betekent the punten tussen de waardes? dus je 
 }
 
 function mouseDragged() {
-  const gameMouseX = mouseX / gameScale;
-  const gameMouseY = mouseY / gameScale;
+  let gameMouseX = mouseX / gameScale;
+  let gameMouseY = mouseY / gameScale;
 
   // de stick laten meebewegen
   if (draggingStick == true) {
@@ -319,7 +405,7 @@ function mouseDragged() {
 
     // Eten opeten (alleen als je de pet sleept)
     for (let index = 0; index < foods.length; index++) {
-      const food = foods[index];
+      let food = foods[index];
       if (food && dist(petX, petY, food.x, food.y) < petSize / 2 + 35) {
         foods[index] = null;
         stats.hunger += 20;
@@ -329,12 +415,16 @@ function mouseDragged() {
     }
     // Drinken (alleen als je de pet sleept)
     for (let index = 0; index < drinks.length; index++) {
-      const drink = drinks[index];
+      let drink = drinks[index];
       if (drink && dist(petX, petY, drink.x, drink.y) < petSize / 2 + 25) {
         drinks[index] = null;
         stats.energy += 20;
         stats.happiness += 5;
       }
+    }
+
+    if (isPetNearTV()) {
+      playVideoOnTV();
     }
   }
 }
@@ -344,6 +434,84 @@ function mouseReleased() {
 
   // de stick loslaten
   draggingStick = false;
+}
+
+function getTVPosition() {
+  let tvX = (gameWorldWidth - TV_WIDTH) / 2;
+  if (tvX < 0) {
+    tvX = 0;
+  }
+
+  return {
+    x: tvX,
+    y: 0
+  };
+}
+
+function getTVScreenBounds() {
+  let tvPosition = getTVPosition();
+
+  return {
+    x: tvPosition.x + (TV_SCREEN_CROP.x - TV_IMAGE_CROP.x) * TV_WIDTH / TV_IMAGE_CROP.width,
+    y: tvPosition.y + (TV_SCREEN_CROP.y - TV_IMAGE_CROP.y) * TV_HEIGHT / TV_IMAGE_CROP.height,
+    width: TV_SCREEN_CROP.width * TV_WIDTH / TV_IMAGE_CROP.width,
+    height: TV_SCREEN_CROP.height * TV_HEIGHT / TV_IMAGE_CROP.height
+  };
+}
+
+function isPetNearTV() {
+  if (!tvVisible) {
+    return false;
+  }
+
+  let screen = getTVScreenBounds();
+  let screenCenterX = screen.x + screen.width / 2;
+  let screenCenterY = screen.y + screen.height / 2;
+  return dist(petX, petY, screenCenterX, screenCenterY) < petSize / 2 + 70;
+}
+
+function spawnTVAndBoostHappiness() {
+  stats.happiness = constrain(stats.happiness + 20, 0, 100);
+
+  if (!tvVisible) {
+    tvVisible = true;
+    petWasNearTV = false;
+  }
+
+  if (isPetNearTV()) {
+    playVideoOnTV();
+  }
+}
+
+function playVideoOnTV() {
+  if (videoPlayingOnTV) {
+    return;
+  }
+
+  if (tvVideo.elt.readyState >= 1) {
+    tvVideo.elt.currentTime = 0;
+  }
+
+  videoPlayingOnTV = true;
+  petWasNearTV = isPetNearTV();
+  setGameControlsVisible(false);
+  tvMusic.stop();
+  tvMusic.play();
+  tvVideo.elt.play();
+}
+
+function setGameControlsVisible(visible) {
+  if (visible) {
+    Food.show();
+    Drink.show();
+    Sleep.show();
+    happinessButton.show();
+  } else {
+    Food.hide();
+    Drink.hide();
+    Sleep.hide();
+    happinessButton.hide();
+  }
 }
 
 function FoodSpawn() {
