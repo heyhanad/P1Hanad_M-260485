@@ -1,21 +1,16 @@
-if (score > 80 && score <= 90) {
-  console.log("Je score is tussen 80 en 90");
-}
-
-if (dag == "zaterdag" || dag == "zondag") {
-  console.log("Het is weekend!");
-}
-
-if (leeftijd > 18) {
-  console.log("Je bent 18 of ouder");
-}
+let leeftijd = 18
+// dit is mijn arrays
 
 function setup() {
-  createCanvas(400, 400);
+  createCanvas(400, 200);
 }
 
 function draw() {
   background(220);
 
-  
+  if(leeftijd < 19 )
+
+
+
+  rect(50, 50, 50, 50);
 }

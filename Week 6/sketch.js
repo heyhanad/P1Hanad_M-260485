@@ -1,14 +1,17 @@
+// Bewaar de vier behoeften van het huisdier als getallen van 0 tot 100.
 let stats = {
   health: 100,
   energy: 100,
   happiness: 100,
   hunger: 100
 };
+// Bewaar de positie en grootte van het huisdier in de spelwereld.
 let petX = 400;
 let petY = 500;
 let petSize = 450;
 let draggingPet = false;
 
+// Variabelen voor de afbeeldingen video en muziek.
 let imgMonster
 let imgBackground
 let imgSword
@@ -18,35 +21,40 @@ let imgTV
 let tvVideo
 let tvMusic
 
+// Uitsnedes en afmetingen om alleen het scherm uit de tv-afbeelding te tekenen.
 let TV_IMAGE_CROP = { x: 252, y: 205, width: 150, height: 285 };
 let TV_WIDTH = 220;
 let TV_HEIGHT = 418;
 let TV_SCREEN_CROP = { x: 273, y: 227, width: 109, height: 88 };
 let happinessButton;
+// Onthoud of de tv zichtbaar is en of de video al speelt.
 let tvVisible = false;
 let videoPlayingOnTV = false;
 let petWasNearTV = false;
 
-///
-
+// Laad afbeeldingen en geluid voordat de game begint.
 function preload() {
-  imgMonster = loadImage('Monster.png'); // Monster energy = drinken
-  imgBackground = loadImage('Background.png');// background
-  imgSword = loadImage('minecraf diamond longSword p5.png');// THE DIAMONDLONGSWORDD  LOOL
-  imgBed = loadImage('Bed.png');// Tuff bed
-  imgPizza = loadImage('pizza.png');// i love pizza but not fries so put the fries in the bag lil bro
+  imgMonster = loadImage('Monster.png'); // Laad het blikje dat bij drinken wordt getekend.
+  imgBackground = loadImage('Background.png'); // Laad de achtergrond van de game.
+  imgSword = loadImage('minecraf diamond longSword p5.png'); // Laad het zwaard dat de speler kan slepen.
+  imgBed = loadImage('Bed.png'); // Laad de afbeelding van het bed.
+  imgPizza = loadImage('pizza.png'); // Laad de afbeelding van eten.
   imgTV = loadImage('minecraft TV.png');
+  // Laad de muziek die samen met de tv video afspeelt.
   tvMusic = loadSound('2.06_-_Kaleo_-_Way_Down_We_Go_OST_Lucifer_(mp3.pm).mp3');
 }
 
+// Lijsten voor eten en drinken; statNames helpt alle behoeften in een lus te begrenzen.
 let foods = [];
 let drinks = [];
 let statNames = ["health", "energy", "happiness", "hunger"];
 
+// Variabelen voor de knoppen en slaapfunctie.
 let Food;
 let Drink;
 let Sleep;
 
+// Posities en toestanden voor het zwaard, canvas, bed en slapen.
 let stickX = 150;
 let stickY = 700;
 let draggingStick = false;
@@ -59,6 +67,7 @@ let bedY = 650;
 let bedVisible = false;
 let petSleeping = false;
 
+// Maak het canvas, de video en de knoppen aan.
 function setup() {
   gameCanvas = createCanvas(windowWidth, windowHeight);
 
@@ -66,15 +75,18 @@ function setup() {
   document.body.style.overflow = "hidden";
   gameCanvas.style("display", "block");
 
+  // Maak een verborgen video-element dat later op het canvas wordt getekend.
   tvVideo = createVideo('11.1 — Timeline export of 10.1.mp4');
   tvVideo.hide();
-  tvVideo.elt.playsInline = true;
-  tvVideo.elt.muted = true;
+  tvVideo.elt.playsInline = true; // Speel de video in het canvas af.
+  tvVideo.elt.muted = true; // Zet het geluid van de video uit; de muziek speelt apart.
+  // Herstel de knoppen en stop de muziek als de video klaar is.
   tvVideo.elt.onended = function () {
     videoPlayingOnTV = false;
     tvMusic.stop();
     setGameControlsVisible(true);
   };
+  // Herstel de game en meld een fout als de video niet kan afspelen.
   tvVideo.elt.onerror = function () {
     videoPlayingOnTV = false;
     tvMusic.stop();
@@ -82,37 +94,42 @@ function setup() {
     console.error("De video kon niet worden afgespeeld:", tvVideo.elt.error);
   };
 
+  // Maak de knoppen en koppel elke knop aan de functie die erbij hoort.
   Food = createButton("FoodSpawn");
-  Food.style("background-color", "orange");
-  Food.mousePressed(FoodSpawn);
+  Food.style("background-color", "orange"); // Geef de knop een kleur.
+  Food.mousePressed(FoodSpawn); // Roep FoodSpawn aan bij een klik.
 
   Drink = createButton("Drinken");
   Drink.style("background-color", "lightblue");
-  Drink.mousePressed(DrinkSpawn);
+  Drink.mousePressed(DrinkSpawn); // Roep DrinkSpawn aan bij een klik.
 
   Sleep = createButton("Slapen");
   Sleep.style("background-color", "lightgreen");
-  Sleep.mousePressed(sleepPet);
+  Sleep.mousePressed(sleepPet); // Zet het bed aan of uit bij een klik.
 
   happinessButton = createButton("Happiness");
   happinessButton.style("background-color", "pink");
-  happinessButton.mousePressed(spawnTVAndBoostHappiness);
+  happinessButton.mousePressed(spawnTVAndBoostHappiness); // Toon de tv en verhoog happiness.
 
   fitCanvasToWindow();
 }
 
+// Pas het canvas en de knopposities aan als het venster verandert.
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
   fitCanvasToWindow();
 }
 
+// Schaal de spelwereld naar de hoogte van het venster en zet de knoppen rechtsboven.
 function fitCanvasToWindow() {
+  // Schaal de vaste spelhoogte naar het venster en bereken de breedte van de wereld.
   let previousWorldWidth = gameWorldWidth;
-  gameScale = height / 800;
-  gameWorldWidth = width / gameScale;
-  petX += (gameWorldWidth - previousWorldWidth) / 2;
-  bedX = constrain(650, petSize / 2, gameWorldWidth - petSize / 2);
+  gameScale = height / 800; // Houd de spelwereld 800 eenheden hoog.
+  gameWorldWidth = width / gameScale; // Reken de vensterbreedte om naar spelcoordinaten.
+  petX += (gameWorldWidth - previousWorldWidth) / 2; // Houd het huisdier ongeveer in het midden.
+  bedX = constrain(650, petSize / 2, gameWorldWidth - petSize / 2); // Houd het bed binnen de wereld.
 
+  // Zet de knoppen rechtsboven en schaal hun tekst mee met het venster.
   Food.position(width - 250 * gameScale, 20 * gameScale);
   Food.style("font-size", 25 * gameScale + "px");
   Drink.position(width - 500 * gameScale, 20 * gameScale);
@@ -123,12 +140,15 @@ function fitCanvasToWindow() {
   happinessButton.style("font-size", 25 * gameScale + "px");
 }
 
+// Teken elke frame de video of de normale game.
 function draw() {
   if (videoPlayingOnTV) {
+    stats.happiness = constrain(stats.happiness + 0.05, 0, 100); // Happiness gaat langzaam omhoog tot maximaal 100.
     background(0);
     if (tvVideo.elt.readyState >= 2) {
-      let videoAspect = tvVideo.elt.videoWidth / tvVideo.elt.videoHeight;
-      let canvasAspect = width / height;
+      // Bereken verhoudingen zodat de video past zonder uit te rekken.
+      let videoAspect = tvVideo.elt.videoWidth / tvVideo.elt.videoHeight; // Verhouding van de video.
+      let canvasAspect = width / height; // Verhouding van het canvas.
       let videoWidth = width;
       let videoHeight = height;
 
@@ -146,16 +166,21 @@ function draw() {
         videoHeight
       );
     }
+    push(); // Bewaar de tekeninstellingen voordat de meter wordt getekend.
+    scale(gameScale); // Maak de meter even groot als in de game.
+    drawStatusBars(true); // Teken alleen de happiness-meter linksboven over de video.
+    pop(); // Zet de tekeninstellingen terug.
     return;
   }
 
   background(220);
   image(imgBackground, 0, 0, width, height);
 
-  push();
+  push(); // Bewaar de tekeninstellingen voordat de spelwereld wordt geschaald.
   scale(gameScale);
 
   if (tvVisible) {
+    // Teken de tv en start de video wanneer het huisdier er dichtbij komt.
     let tvPosition = getTVPosition();
     image(
       imgTV,
@@ -169,16 +194,18 @@ function draw() {
       TV_IMAGE_CROP.height
     );
 
-    let petNearTV = isPetNearTV();
+    let petNearTV = isPetNearTV(); // Controleer of het huisdier bij de tv staat.
     if (petNearTV && !petWasNearTV) {
-      playVideoOnTV();
+      playVideoOnTV(); // Start alleen bij het naderen, niet elke frame opnieuw.
     }
-    petWasNearTV = petNearTV;
+    petWasNearTV = petNearTV; // Onthoud de afstand voor de volgende frame.
   }
 
+  // Laat honger en energie langzaam dalen tijdens het spelen.
   stats.hunger -= 0.05;
   stats.energy -= 0.01;
 
+  // Als honger op is, dalen gezondheid, happiness en energie ook.
   if (stats.hunger <= 0) {
     stats.health -= 0.05;
     stats.happiness -= 0.05;
@@ -186,35 +213,40 @@ function draw() {
     stats.energy -= 0.05;
   }
 
-  petSleeping = bedVisible && dist(petX, petY, bedX, bedY) < 90;
+  // Herstel energie wanneer het huisdier dicht bij een zichtbaar bed is.
+  petSleeping = bedVisible && dist(petX, petY, bedX, bedY) < 90; // Meet de afstand tot het bed.
   if (petSleeping) {
     stats.energy += 0.2;
   }
 
+  // Houd alle behoeften tussen 0 en 100.
   for (let statIndex = 0; statIndex < statNames.length; statIndex++) {
     let statName = statNames[statIndex];
     stats[statName] = constrain(stats[statName], 0, 100);
   }
 
-  // pet
-  fill("Cyan");
-  circle(petX, petY, petSize);
+  // Teken het huisdier als een blauwe cirkel.
+  fill("Cyan"); // Kies de kleur van het huisdier.
+  circle(petX, petY, petSize); // Teken het huisdier op zijn positie.
 
   if (bedVisible) {
+    // Teken het bed alleen als het is aangezet.
     image(imgBed, bedX - 100, bedY - 70, 200, 140);
   }
 
-  textSize(30)
-  fill('black')
-  text("HogRiderBOYY999", petX - 140, petY)
+  // Teken de naam van het huisdier.
+  textSize(30); // Stel de lettergrootte van de naam in.
+  fill('black'); // Maak de naam zwart.
+  text("HogRiderBOYY999", petX - 140, petY); // Teken de naam naast het huisdier.
 
   if (petSleeping) {
+    // Toon een bericht zolang het huisdier slaapt.
     textSize(20);
     fill("white");
     text("Slaapt - energie herstelt", bedX - 105, bedY + 95);
   }
 
-  // Eten en drinken tekenen
+  // Loop door de lijsten en teken elk eten en drankje dat nog bestaat.
   for (let foodIndex = 0; foodIndex < foods.length; foodIndex++) {
     let food = foods[foodIndex];
     if (food) {
@@ -228,158 +260,193 @@ function draw() {
     }
   }
 
-  // het zwaard
+  // Teken het zwaard op zijn huidige positie.
   image(imgSword, stickX - 50, stickY - 50, 100, 100);
 
-  // slaan
+  // Verlaag de timer en geef schade als het zwaard de huisdier raakt.
   if (hitTimer > 0) {
     hitTimer = hitTimer - 1;
   }
   if (draggingStick == true && dist(stickX, stickY, petX, petY) < petSize / 2 && hitTimer == 0) {
     stats.health -= 10;
-    hitTimer = 30;
+    hitTimer = 30; // Wacht even voordat een volgende aanraking schade doet.
   }
 
-  // de bars
-  noStroke(); // geen dunne rand om de blokjes
-
-  // health
-  // icons heb eerste zwarrt er onder gezet en dan rood
-  fill(0);
-  rect(32, 31, 12, 8);
-  rect(48, 31, 12, 8);
-  rect(28, 35, 36, 12);
-  rect(32, 43, 28, 8);
-  rect(36, 47, 20, 8);
-  rect(40, 51, 12, 8);
-  fill(220, 60, 40);
-  rect(34, 33, 8, 4);
-  rect(50, 33, 8, 4);
-  rect(30, 37, 32, 8);
-  rect(34, 45, 24, 4);
-  rect(38, 49, 16, 4);
-  rect(42, 53, 8, 4);
-  // balk
-  fill(225, 215, 205); // lichte buitenrand
-  rect(92, 22, 316, 46, 6);
-  fill(0); // zwarte rand
-  rect(97, 27, 306, 36, 3);
-  fill(60); // lege balk
-  rect(100, 30, 300, 30);
-  fill(200, 50, 40); // rode vulling
-  rect(100, 30, stats.health * 3, 30);
-  fill(255, 110, 100); // lichte streep
-  rect(100, 33, stats.health * 3, 5);
-  fill(160, 10, 0); // donkere streep
-  rect(100, 55, stats.health * 3, 5);
-
-  // energy
-  // icoonse: bliksem
-  fill(0);
-  rect(44, 89, 16, 8);
-  rect(40, 93, 16, 8);
-  rect(36, 97, 24, 8);
-  rect(40, 101, 16, 8);
-  rect(36, 105, 16, 8);
-  rect(36, 109, 12, 8);
-  rect(32, 113, 12, 8);
-  fill(130, 200, 50);
-  rect(46, 91, 12, 4);
-  rect(42, 95, 12, 4);
-  rect(38, 99, 20, 4);
-  rect(42, 103, 12, 4);
-  rect(38, 107, 12, 4);
-  rect(38, 111, 8, 4);
-  rect(34, 115, 8, 4);
-  // Rect balks
-  fill(225, 215, 205);
-  rect(92, 82, 316, 46, 6);
-  fill(0);
-  rect(97, 87, 306, 36, 3);
-  fill(60);
-  rect(100, 90, 300, 30);
-  fill(130, 200, 50);
-  rect(100, 90, stats.energy * 3, 30);
-  fill(190, 255, 110);
-  rect(100, 93, stats.energy * 3, 5);
-  fill(90, 160, 10);
-  rect(100, 115, stats.energy * 3, 5);
-
-  // happy UI
-  // icon: smile
-  fill(0);
-  rect(36, 147, 20, 8);
-  rect(32, 151, 28, 8);
-  rect(28, 155, 36, 20);
-  rect(32, 171, 28, 8);
-  rect(36, 175, 20, 8);
-  fill(255, 200, 40);
-  rect(38, 149, 16, 4);
-  rect(34, 153, 24, 4);
-  rect(30, 157, 32, 16);
-  rect(34, 173, 24, 4);
-  rect(38, 177, 16, 4);
-  fill(0); // gezichtje
-  rect(38, 161, 4, 4); // linker oog
-  rect(50, 161, 4, 4); // rechter oog
-  rect(34, 165, 4, 4); // mond links
-  rect(54, 165, 4, 4); // mond rechts
-  rect(38, 169, 16, 4); // mond onder
-  // balk
-  fill(225, 215, 205);
-  rect(92, 142, 316, 46, 6);
-  fill(0);
-  rect(97, 147, 306, 36, 3);
-  fill(60);
-  rect(100, 150, 300, 30);
-  fill(255, 200, 40);
-  rect(100, 150, stats.happiness * 3, 30);
-  fill(255, 255, 100);
-  rect(100, 153, stats.happiness * 3, 5);
-  fill(215, 160, 0);
-  rect(100, 175, stats.happiness * 3, 5);
-
-  // hunger blauw
-  // icons eten oranje bolletje
-  fill(0);
-  rect(36, 207, 20, 8);
-  rect(32, 211, 28, 8);
-  rect(28, 215, 36, 20);
-  rect(32, 231, 28, 8);
-  rect(36, 235, 20, 8);
-  fill(255, 150, 30);
-  rect(38, 209, 16, 4);
-  rect(34, 213, 24, 4);
-  rect(30, 217, 32, 16);
-  rect(34, 233, 24, 4);
-  rect(38, 237, 16, 4);
-  fill(255, 230, 150); // glansje
-  rect(38, 217, 4, 4);
-  // balk
-  fill(225, 215, 205);
-  rect(92, 202, 316, 46, 6);
-  fill(0);
-  rect(97, 207, 306, 36, 3);
-  fill(60);
-  rect(100, 210, 300, 30);
-  fill(80, 150, 220);
-  rect(100, 210, stats.hunger * 3, 30);
-  fill(140, 210, 255);
-  rect(100, 213, stats.hunger * 3, 5);
-  fill(40, 110, 180);
-  rect(100, 235, stats.hunger * 3, 5);
+  drawStatusBars(false); // Teken alle statusiconen en meters met for-lussen.
 
   stroke(0); // randen weer aanzetten voor de rest van de game
   pop();
 }
 
-function mousePressed() { // dist betekent the punten tussen de waardes? dus je hebt x, en dan heb je y,
+// Teken de icoontjes en de vier statusbalken.
+// happinessOnly is true tijdens de video, zodat alleen happiness zichtbaar blijft.
+function drawStatusBars(happinessOnly) {
+  noStroke(); // Teken de meters zonder extra randen.
+
+  if (!happinessOnly) { // Teken de iconen alleen in het gewone gamebeeld.
+    // Teken de zwarte buitenkant van het hart met vakjes per rij.
+    fill(0);
+    for (let row = 0; row < 6; row++) { // Loop langs de rijen van het hart.
+      for (let column = 0; column < 9; column++) { // Loop langs de vakjes per rij.
+        let heartCell =
+          (row === 0 && ((column >= 1 && column <= 3) || (column >= 5 && column <= 7))) ||
+          ((row === 1 || row === 2) && column >= 0 && column <= 8) ||
+          (row === 3 && column >= 1 && column <= 7) ||
+          (row === 4 && column >= 2 && column <= 6) ||
+          (row === 5 && column >= 3 && column <= 5);
+        if (heartCell) {
+          rect(28 + column * 4, 31 + row * 4, 4, 4);
+        }
+      }
+    }
+
+    // Teken de rode binnenkant van het hart over de zwarte buitenkant.
+    fill(220, 60, 40);
+    for (let row = 0; row < 6; row++) { // Loop langs de rijen in het hart.
+      for (let column = 0; column < 8; column++) { // Loop langs de vakjes per rij.
+        let redHeartCell =
+          (row === 0 && (column === 1 || column === 2 || column === 5 || column === 6)) ||
+          ((row === 1 || row === 2) && column >= 0 && column <= 7) ||
+          (row === 3 && column >= 1 && column <= 6) ||
+          (row === 4 && column >= 2 && column <= 5) ||
+          (row === 5 && column >= 3 && column <= 4);
+        if (redHeartCell) {
+          rect(30 + column * 4, 33 + row * 4, 4, 4);
+        }
+      }
+    }
+
+    // Teken de zwarte buitenkant van de bliksem.
+    fill(0);
+    for (let row = 0; row < 7; row++) { // Loop langs de rijen van de bliksem.
+      let startX;
+      let blocks;
+      if (row === 0) { startX = 44; blocks = 4; }
+      else if (row === 1) { startX = 40; blocks = 4; }
+      else if (row === 2) { startX = 36; blocks = 6; }
+      else if (row === 3) { startX = 40; blocks = 4; }
+      else if (row === 4) { startX = 36; blocks = 4; }
+      else if (row === 5) { startX = 36; blocks = 3; }
+      else { startX = 32; blocks = 3; }
+      for (let column = 0; column < blocks; column++) {
+        rect(startX + column * 4, 89 + row * 4, 4, 4);
+      }
+    }
+
+    // Teken de groene binnenkant van de bliksem met dezelfde aanpak.
+    fill(130, 200, 50);
+    for (let row = 0; row < 7; row++) {
+      let startX;
+      let blocks;
+      if (row === 0) { startX = 46; blocks = 3; }
+      else if (row === 1) { startX = 42; blocks = 3; }
+      else if (row === 2) { startX = 38; blocks = 5; }
+      else if (row === 3) { startX = 42; blocks = 3; }
+      else if (row === 4) { startX = 38; blocks = 3; }
+      else if (row === 5) { startX = 38; blocks = 2; }
+      else { startX = 34; blocks = 2; }
+      for (let column = 0; column < blocks; column++) {
+        rect(startX + column * 4, 91 + row * 4, 4, 4);
+      }
+    }
+
+    // Teken de zwarte buitenkant van het hunger-icoon.
+    fill(0);
+    for (let row = 0; row < 9; row++) {
+      let startX = 28;
+      let blocks = 9;
+      if (row === 0 || row === 8) { startX = 36; blocks = 5; }
+      else if (row === 1 || row === 7) { startX = 32; blocks = 7; }
+      for (let column = 0; column < blocks; column++) {
+        rect(startX + column * 4, 207 + row * 4, 4, 4);
+      }
+    }
+
+    // Teken de oranje binnenkant van het hunger-icoon.
+    fill(255, 150, 30);
+    for (let row = 0; row < 8; row++) {
+      let startX;
+      let blocks;
+      let y;
+      if (row === 0) { startX = 38; blocks = 4; y = 209; }
+      else if (row === 1) { startX = 34; blocks = 6; y = 213; }
+      else if (row <= 5) { startX = 30; blocks = 8; y = 217 + (row - 2) * 4; }
+      else if (row === 6) { startX = 34; blocks = 6; y = 233; }
+      else { startX = 38; blocks = 4; y = 237; }
+      for (let column = 0; column < blocks; column++) {
+        rect(startX + column * 4, y, 4, 4);
+      }
+    }
+    fill(255, 230, 150); // Geef het icoon een licht glansje.
+    rect(38, 217, 4, 4);
+  }
+
+  // Deze for-lus tekent de buitenkant en vulling van alle vier meters.
+  let firstBar = 0;
+  let lastBar = 4;
+  if (happinessOnly) { // Tijdens de video wordt alleen happiness getoond.
+    firstBar = 2;
+    lastBar = 3;
+  }
+
+  for (let bar = firstBar; bar < lastBar; bar++) { // Herhaal de tekenstappen per meter.
+    let y = 22 + bar * 60; // Zet elke meter 60 pixels onder de vorige.
+    let value;
+
+    fill(225, 215, 205); // Teken de lichte buitenrand.
+    rect(92, y, 316, 46, 6);
+    fill(0); // Teken de zwarte rand.
+    rect(97, y + 5, 306, 36, 3);
+    fill(60); // Teken het lege deel van de meter.
+    rect(100, y + 8, 300, 30);
+
+    // Koppel elke balk aan de juiste behoefte en kleur.
+    if (bar === 0) {
+      value = stats.health;
+      fill(200, 50, 40); // Kies rood voor health.
+    } else if (bar === 1) {
+      value = stats.energy;
+      fill(130, 200, 50); // Kies groen voor energy.
+    } else if (bar === 2) {
+      value = stats.happiness;
+      fill(255, 200, 40); // Kies geel voor happiness.
+    } else {
+      value = stats.hunger;
+      fill(80, 150, 220); // Kies blauw voor hunger.
+    }
+    rect(100, y + 8, value * 3, 30); // De gekleurde vulling toont de waarde.
+
+    // Teken de lichte en donkere streepjes passend bij de kleur van de balk.
+    if (bar === 0) {
+      fill(255, 110, 100);
+      rect(100, y + 11, value * 3, 5);
+      fill(160, 10, 0);
+    } else if (bar === 1) {
+      fill(190, 255, 110);
+      rect(100, y + 11, value * 3, 5);
+      fill(90, 160, 10);
+    } else if (bar === 2) {
+      fill(255, 255, 100);
+      rect(100, y + 11, value * 3, 5);
+      fill(215, 160, 0);
+    } else {
+      fill(140, 210, 255);
+      rect(100, y + 11, value * 3, 5);
+      fill(40, 110, 180);
+    }
+    rect(100, y + 33, value * 3, 5); // Teken de donkere streep onder de vulling.
+  }
+}
+
+// Reageer op een muisklik en kijk of de speler het zwaard of huisdier aanklikt.
+function mousePressed() {
+  // Zet de muispositie om van schermcoordinaten naar spelcoordinaten.
   let gameMouseX = mouseX / gameScale;
   let gameMouseY = mouseY / gameScale;
 
   if (dist(gameMouseX, gameMouseY, stickX, stickY) < 55) {
     draggingStick = true;
-    return;// gaat weer terug naar het begin van de code 
+    return; // Stop hier zodat dezelfde klik het huisdier niet ook vastpakt.
   }
 
   if (dist(gameMouseX, gameMouseY, petX, petY) < petSize / 2) {
@@ -387,23 +454,24 @@ function mousePressed() { // dist betekent the punten tussen de waardes? dus je 
   }
 }
 
+// Verplaats het vastgehouden voorwerp terwijl de muis beweegt.
 function mouseDragged() {
+  // Gebruik spelcoordinaten zodat slepen klopt met de schaal van het canvas.
   let gameMouseX = mouseX / gameScale;
   let gameMouseY = mouseY / gameScale;
 
-  // de stick laten meebewegen
+  // Laat het zwaard de muis volgen zolang het wordt vastgehouden.
   if (draggingStick == true) {
     stickX = gameMouseX;
     stickY = gameMouseY;
   }
 
-  if (draggingPet == true) { // hier heb ik constrain gebruikt constrain is eigenlijk het controleerd of je waarde niet te hoog is voor de maximaal dus je hebt 6700, 0, 100 6700 is te hoog dus hij pakt de 100
-    // ik gebruikt de constrain ook voor mijn slap rect tool dus als hij dicht bij is bij een object dat hij het uitvoerd in de canvas
+  if (draggingPet == true) {
+    // Beperk de positie zodat het huisdier binnen de spelwereld blijft.
     petX = constrain(gameMouseX, petSize / 2, gameWorldWidth - petSize / 2);
-    petY = constrain(gameMouseY, petSize / 2, 800 - petSize / 2); // de constrain controleerd of
-    // mijn muis dicht bij is bij mijn pet zo ja dan kan ik de pet draggen
+    petY = constrain(gameMouseY, petSize / 2, 800 - petSize / 2);
 
-    // Eten opeten (alleen als je de pet sleept)
+    // Eet eten op als het huisdier er dichtbij komt.
     for (let index = 0; index < foods.length; index++) {
       let food = foods[index];
       if (food && dist(petX, petY, food.x, food.y) < petSize / 2 + 35) {
@@ -413,7 +481,7 @@ function mouseDragged() {
         stats.health += 20;
       }
     }
-    // Drinken (alleen als je de pet sleept)
+    // Drink een drankje op als het huisdier er dichtbij komt.
     for (let index = 0; index < drinks.length; index++) {
       let drink = drinks[index];
       if (drink && dist(petX, petY, drink.x, drink.y) < petSize / 2 + 25) {
@@ -429,13 +497,14 @@ function mouseDragged() {
   }
 }
 
+// Stop met slepen zodra de muisknop wordt losgelaten.
 function mouseReleased() {
   draggingPet = false;
 
-  // de stick loslaten
   draggingStick = false;
 }
 
+// Bereken de positie van de tv in het midden van de spelwereld.
 function getTVPosition() {
   let tvX = (gameWorldWidth - TV_WIDTH) / 2;
   if (tvX < 0) {
@@ -448,6 +517,7 @@ function getTVPosition() {
   };
 }
 
+// Bereken waar het scherm zit binnen de afbeelding van de tv.
 function getTVScreenBounds() {
   let tvPosition = getTVPosition();
 
@@ -459,6 +529,7 @@ function getTVScreenBounds() {
   };
 }
 
+// Controleer met afstand of het huisdier dicht genoeg bij het tv-scherm is.
 function isPetNearTV() {
   if (!tvVisible) {
     return false;
@@ -470,6 +541,7 @@ function isPetNearTV() {
   return dist(petX, petY, screenCenterX, screenCenterY) < petSize / 2 + 70;
 }
 
+// Toon de tv en geef happiness wanneer de happiness-knop wordt ingedrukt.
 function spawnTVAndBoostHappiness() {
   stats.happiness = constrain(stats.happiness + 20, 0, 100);
 
@@ -483,10 +555,13 @@ function spawnTVAndBoostHappiness() {
   }
 }
 
+// Start de video en muziek en zet happiness op nul aan het begin.
 function playVideoOnTV() {
   if (videoPlayingOnTV) {
     return;
   }
+
+  stats.happiness = 0; // Begin met 0 happiness wanneer de video start.
 
   if (tvVideo.elt.readyState >= 1) {
     tvVideo.elt.currentTime = 0;
@@ -500,6 +575,7 @@ function playVideoOnTV() {
   tvVideo.elt.play();
 }
 
+// Verberg of toon alle knoppen terwijl de video speelt.
 function setGameControlsVisible(visible) {
   if (visible) {
     Food.show();
@@ -514,6 +590,7 @@ function setGameControlsVisible(visible) {
   }
 }
 
+// Maak een nieuw eten op een willekeurige plek in de spelwereld.
 function FoodSpawn() {
   foods.push({
     x: random(30, gameWorldWidth - 30),
@@ -521,6 +598,7 @@ function FoodSpawn() {
   });
 }
 
+// Maak een nieuw drankje op een willekeurige plek in de spelwereld.
 function DrinkSpawn() {
   drinks.push({
     x: random(30, gameWorldWidth - 30),
@@ -528,6 +606,7 @@ function DrinkSpawn() {
   });
 }
 
+// Zet het bed aan of uit; als het uitgaat, stopt de slaapstatus.
 function sleepPet() {
   bedVisible = !bedVisible;
   if (!bedVisible) {
