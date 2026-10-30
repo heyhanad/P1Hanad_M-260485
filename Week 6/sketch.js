@@ -1,4 +1,4 @@
-// varbs stats
+// varbs stats   /// Hanad was here
 let stats = {
   health: 100,
   energy: 20,
